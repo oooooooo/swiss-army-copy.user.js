@@ -3,7 +3,7 @@
 ## Install
 
 1. Install [Violentmonkey](https://violentmonkey.github.io/)
-2. Click [Swiss Army Copy](https://github.com/oooooooo/swiss-army-copy/raw/main/swiss-army-copy.user.js)
+2. Click [Swiss Army Copy](https://github.com/oooooooo/swiss-army-copy.user.js/raw/main/swiss-army-copy.user.js)
 
 ## Usage
 
