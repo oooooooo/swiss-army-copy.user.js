@@ -4,7 +4,7 @@
 // @description Formats copy output in multiple formats
 // @match       *://*/*
 // @grant       GM_setClipboard
-// @version     0.9.1
+// @version     0.9.3
 // @author      oooooooo
 // @updateURL    https://github.com/oooooooo/swiss-army-copy/raw/main/swiss-army-copy.user.js
 // @downloadURL  https://github.com/oooooooo/swiss-army-copy/raw/main/swiss-army-copy.user.js
@@ -16,18 +16,28 @@
 
   const amazonUrl = /(?<url>https?:\/\/(www\.)?amazon\.(.+?))\/(.+?)?dp\/(?<asin>[a-zA-Z0-9]+)/
 
-  document.addEventListener('copy', (e) => {
-    if (window.getSelection().toString() === '') {
-      let url = document.location.href
+  const isEditable = (element) =>
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLTextAreaElement ||
+    (element instanceof HTMLElement && element.isContentEditable)
 
-      const match = amazonUrl.exec(url)
-      if (match) {
-        url = `${match.groups.url}/dp/${match.groups.asin}`
-      }
+  // Handle Ctrl+C on keydown instead of the copy event: Chrome does not fire
+  // copy when nothing is selected.
+  window.addEventListener('keydown', (event) => {
+    if (!event.ctrlKey || event.key.toLowerCase() !== 'c') return
+    if (window.getSelection().toString() !== '') return
+    // Text selected inside an input is invisible to getSelection(), so leave it to the browser.
+    if (isEditable(document.activeElement)) return
 
-      navigator.clipboard.writeText(`${document.title}\n${url}`)
+    let url = document.location.href
+
+    const match = amazonUrl.exec(url)
+    if (match) {
+      url = `${match.groups.url}/dp/${match.groups.asin}`
     }
-  })
+
+    navigator.clipboard.writeText(`${document.title}\n${url}`)
+  }, true)
 
   document.addEventListener('keydown', function (event) {
     if (event.ctrlKey && event.key === 'm') {
