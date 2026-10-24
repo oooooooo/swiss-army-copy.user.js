@@ -57,6 +57,36 @@ describe("Ctrl+C", () => {
 		);
 	});
 
+	it("removes tracking parameters and keeps the rest", () => {
+		const { window, writeText } = openPage(
+			"https://example.com/a?utm_source=x&id=1&fbclid=y&flag&q=a+b#top",
+		);
+		press(window, "c");
+		expect(writeText).toHaveBeenCalledExactlyOnceWith(
+			"Page Title\nhttps://example.com/a?id=1&flag&q=a+b#top",
+		);
+	});
+
+	it("drops the query string when only tracking parameters remain", () => {
+		const { window, writeText } = openPage(
+			"https://example.com/a?utm_source=x&utm_medium=y&gclid=z",
+		);
+		press(window, "c");
+		expect(writeText).toHaveBeenCalledExactlyOnceWith(
+			"Page Title\nhttps://example.com/a",
+		);
+	});
+
+	it("keeps parameters that sites may rely on, such as ref", () => {
+		const { window, writeText } = openPage(
+			"https://github.com/o/r/blob/main/x.js?ref=dev",
+		);
+		press(window, "c");
+		expect(writeText).toHaveBeenCalledExactlyOnceWith(
+			"Page Title\nhttps://github.com/o/r/blob/main/x.js?ref=dev",
+		);
+	});
+
 	it("leaves selected text to the browser", () => {
 		const { window, document, writeText } = openPage("https://example.com/");
 		select(window, document.getElementById("text"));
@@ -83,6 +113,24 @@ describe("Ctrl+M", () => {
 		press(window, "m");
 		expect(writeText).toHaveBeenCalledExactlyOnceWith(
 			"[Page Title](https://example.com/)",
+		);
+	});
+
+	it("uses the cleaned URL", () => {
+		const { window, writeText } = openPage(
+			"https://example.com/a?utm_source=x&id=1",
+		);
+		press(window, "m");
+		expect(writeText).toHaveBeenCalledExactlyOnceWith(
+			"[Page Title](https://example.com/a?id=1)",
+		);
+	});
+
+	it("uses the shortened URL on an Amazon product page", () => {
+		const { window, writeText } = openPage(AMAZON_URL);
+		press(window, "m");
+		expect(writeText).toHaveBeenCalledExactlyOnceWith(
+			"[Page Title](https://www.amazon.co.jp/dp/B01CQMK4BY)",
 		);
 	});
 });

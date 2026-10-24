@@ -11,7 +11,8 @@
 
 If no text is selected, the tool copies the title and URL.
 
-In the case of Amazon, the URL is shortened.
+The URL is cleaned: tracking parameters such as `utm_*` and `fbclid` are
+removed, and Amazon product URLs are shortened.
 
 ```text
 https://www.amazon.com/Victorinox-Swiss-Classic-Pocket-Knife/dp/B00004YVB2?ref_=ast_sto_dp&th=1
@@ -25,7 +26,7 @@ https://www.amazon.com/dp/B00004YVB2
 
 ### C-m
 
-Create links in markdown format
+Create links in markdown format with the cleaned URL
 
 ```text
 [title](url)

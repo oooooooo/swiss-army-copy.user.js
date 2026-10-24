@@ -3,7 +3,7 @@
 // @namespace   Violentmonkey Scripts
 // @description Formats copy output in multiple formats
 // @match       *://*/*
-// @version     0.9.4
+// @version     0.10.0
 // @author      oooooooo
 // @updateURL   https://github.com/oooooooo/swiss-army-copy/raw/main/swiss-army-copy.user.js
 // @downloadURL https://github.com/oooooooo/swiss-army-copy/raw/main/swiss-army-copy.user.js
@@ -16,6 +16,33 @@
 
 	const amazonUrl =
 		/(?<url>https?:\/\/(www\.)?amazon\.(.+?))\/(.+?)?dp\/(?<asin>[a-zA-Z0-9]+)/;
+
+	// Only parameters that are always tracking; e.g. "ref" is left alone because
+	// sites such as GitHub use it for real content.
+	const trackingParam =
+		/^(utm_.+|fbclid|gclid|dclid|gbraid|wbraid|msclkid|yclid|igshid|mc_cid|mc_eid)$/;
+
+	// Filter the raw query string instead of URLSearchParams so the remaining
+	// parameters keep their original spelling (e.g. "?flag" stays "?flag").
+	const removeTrackingParams = (href) => {
+		const url = new URL(href);
+		const params = url.search
+			.slice(1)
+			.split("&")
+			.filter(
+				(param) => param !== "" && !trackingParam.test(param.split("=")[0]),
+			);
+		url.search = params.join("&");
+		return url.href;
+	};
+
+	const cleanUrl = (href) => {
+		const match = amazonUrl.exec(href);
+		if (match) {
+			return `${match.groups.url}/dp/${match.groups.asin}`;
+		}
+		return removeTrackingParams(href);
+	};
 
 	const isEditable = (element) =>
 		element instanceof HTMLInputElement ||
@@ -32,14 +59,9 @@
 			// Text selected inside an input is invisible to getSelection(), so leave it to the browser.
 			if (isEditable(document.activeElement)) return;
 
-			let url = document.location.href;
-
-			const match = amazonUrl.exec(url);
-			if (match) {
-				url = `${match.groups.url}/dp/${match.groups.asin}`;
-			}
-
-			navigator.clipboard.writeText(`${document.title}\n${url}`);
+			navigator.clipboard.writeText(
+				`${document.title}\n${cleanUrl(document.location.href)}`,
+			);
 		},
 		true,
 	);
@@ -47,7 +69,7 @@
 	document.addEventListener("keydown", (event) => {
 		if (event.ctrlKey && event.key === "m") {
 			navigator.clipboard.writeText(
-				`[${document.title}](${document.location.href})`,
+				`[${document.title}](${cleanUrl(document.location.href)})`,
 			);
 		}
 
